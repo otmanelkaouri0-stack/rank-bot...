@@ -19,14 +19,15 @@ const CONFIG = {
 // ==============================
 // IMPORTS
 // ==============================
-const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, AttachmentBuilder, PermissionsBitField } = require('discord.js');
 const fs = require('fs');
 const { createCanvas, loadImage } = require('canvas');
 
 // ==============================
 // TOKEN
 // ==============================
-const TOKEN = process.env.TOKEN;
+// بدل هاد التوكن بالتوكن الجديد ديالك
+const TOKEN = "MTQ4OTY5NDQxMTQ3MzQyNDQwNg.GOFqoj.zUbAuMglnd9lBi7ULM3v_IRgxzeXiCpLINmGmY";
 
 // ==============================
 // CLIENT
@@ -104,7 +105,12 @@ function getRankImageByLevel(level) {
   if (level >= 1 && level <= 5) return 'rank1.png';
   if (level >= 6 && level <= 10) return 'rank2.png';
   if (level >= 11 && level <= 15) return 'rank3.png';
-  return 'rank4.png';
+  if (level >= 16 && level <= 20) return 'rank4.png';
+  return 'rank5.png';
+}
+
+function isAdmin(member) {
+  return member.permissions.has(PermissionsBitField.Flags.Administrator);
 }
 
 async function handleLevelUp(member, userId) {
@@ -223,7 +229,7 @@ async function generateLeaderboardImage(guild) {
 
   ctx.fillStyle = '#ffffff';
   ctx.font = 'italic bold 42px Arial';
-  ctx.fillText('NEW VERSION 🔥', 45, 58);
+  ctx.fillText(CONFIG.SERVER_TITLE, 45, 58);
 
   ctx.fillStyle = '#facc15';
   ctx.font = 'bold 40px Arial';
@@ -241,16 +247,20 @@ async function generateLeaderboardImage(guild) {
 
     let rankColor = '#ffffff';
     let glowColor = 'rgba(255,255,255,0.08)';
+    let cardFill = 'rgba(255,255,255,0.06)';
 
     if (i === 0) {
       rankColor = '#facc15';
       glowColor = 'rgba(250,204,21,0.25)';
+      cardFill = 'rgba(250,204,21,0.15)';
     } else if (i === 1) {
       rankColor = '#d1d5db';
       glowColor = 'rgba(209,213,219,0.22)';
+      cardFill = 'rgba(209,213,219,0.13)';
     } else if (i === 2) {
       rankColor = '#fb923c';
       glowColor = 'rgba(251,146,60,0.22)';
+      cardFill = 'rgba(251,146,60,0.13)';
     }
 
     if (i < 3) {
@@ -263,84 +273,46 @@ async function generateLeaderboardImage(guild) {
       ctx.restore();
     }
 
-    ctx.fillStyle = i < 3 ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.06)';
+    ctx.fillStyle = cardFill;
     roundRect(ctx, 40, y, width - 80, 82, 20);
     ctx.fill();
 
-    ctx.strokeStyle = i < 3 ? `${rankColor}55` : 'rgba(255,255,255,0.07)';
+    ctx.strokeStyle = i < 3 ? `${rankColor}66` : 'rgba(255,255,255,0.08)';
     ctx.lineWidth = i < 3 ? 2 : 1.5;
     roundRect(ctx, 40, y, width - 80, 82, 20);
     ctx.stroke();
 
-    if (i < 3) {
-      ctx.save();
-      ctx.shadowColor = glowColor;
-      ctx.shadowBlur = 20;
-      ctx.fillStyle = 'rgba(15,23,42,0.95)';
-      roundRect(ctx, 55, y + 16, 82, 50, 14);
-      ctx.fill();
-      ctx.restore();
-    } else {
-      ctx.fillStyle = 'rgba(15,23,42,0.85)';
-      roundRect(ctx, 55, y + 16, 82, 50, 14);
-      ctx.fill();
-    }
+    ctx.fillStyle = 'rgba(15,23,42,0.90)';
+    roundRect(ctx, 55, y + 16, 82, 50, 14);
+    ctx.fill();
 
-    ctx.strokeStyle = `${rankColor}66`;
+    ctx.strokeStyle = `${rankColor}88`;
     ctx.lineWidth = 2;
     roundRect(ctx, 55, y + 16, 82, 50, 14);
     ctx.stroke();
 
-    if (i < 3) {
-      ctx.save();
-      ctx.shadowColor = rankColor;
-      ctx.shadowBlur = 14;
-      ctx.fillStyle = rankColor;
-      ctx.font = 'bold 30px Arial';
-      ctx.fillText(`#${i + 1}`, 72, y + 50);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = rankColor;
-      ctx.font = 'bold 30px Arial';
-      ctx.fillText(`#${i + 1}`, 72, y + 50);
-    }
+    ctx.fillStyle = rankColor;
+    ctx.font = 'bold 30px Arial';
+    ctx.fillText(`#${i + 1}`, 72, y + 50);
 
     if (user) {
       const avatarURL = user.displayAvatarURL({ extension: 'png', size: 128 });
       try {
         const avatar = await loadImage(avatarURL);
 
-        if (i < 3) {
-          ctx.beginPath();
-          ctx.arc(185, y + 41, 35, 0, Math.PI * 2);
-          ctx.fillStyle = glowColor;
-          ctx.fill();
-        } else {
-          ctx.beginPath();
-          ctx.arc(185, y + 41, 33, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(59,130,246,0.22)';
-          ctx.fill();
-        }
+        ctx.beginPath();
+        ctx.arc(185, y + 41, i < 3 ? 35 : 33, 0, Math.PI * 2);
+        ctx.fillStyle = i < 3 ? glowColor : 'rgba(59,130,246,0.22)';
+        ctx.fill();
 
         drawCircleImage(ctx, avatar, 185, y + 41, 28);
       } catch (error) {}
     }
 
-    if (i < 3) {
-      ctx.save();
-      ctx.shadowColor = glowColor;
-      ctx.shadowBlur = 10;
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 29px Arial';
-      const displayName = user ? `@${user.username}` : 'Unknown User';
-      ctx.fillText(displayName, 235, y + 34);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 29px Arial';
-      const displayName = user ? `@${user.username}` : 'Unknown User';
-      ctx.fillText(displayName, 235, y + 34);
-    }
+    const displayName = user ? `@${user.username}` : 'Unknown User';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 29px Arial';
+    ctx.fillText(displayName, 235, y + 34);
 
     ctx.fillStyle = '#cbd5e1';
     ctx.font = '21px Arial';
@@ -362,12 +334,6 @@ async function generateLeaderboardImage(guild) {
     ctx.fillStyle = progressGradient;
     roundRect(ctx, 760, y + 42, 260 * progressData.progress, 16, 8);
     ctx.fill();
-
-    if (i < 3) {
-      ctx.fillStyle = glowColor;
-      roundRect(ctx, 760, y + 42, 260 * progressData.progress, 16, 8);
-      ctx.fill();
-    }
   }
 
   return canvas.toBuffer('image/png');
@@ -384,71 +350,80 @@ async function generateRankCard(member, stats) {
   const ctx = canvas.getContext('2d');
 
   const bg = ctx.createLinearGradient(0, 0, width, height);
-  bg.addColorStop(0, '#0f172a');
-  bg.addColorStop(1, '#020617');
+  bg.addColorStop(0, '#0a1120');
+  bg.addColorStop(0.5, '#101a2f');
+  bg.addColorStop(1, '#050b16');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
 
   ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  roundRect(ctx, 20, 20, 960, 310, 25);
+  roundRect(ctx, 20, 20, 960, 310, 30);
   ctx.fill();
+
+  ctx.strokeStyle = 'rgba(59,130,246,0.18)';
+  ctx.lineWidth = 2;
+  roundRect(ctx, 20, 20, 960, 310, 30);
+  ctx.stroke();
 
   try {
     const logo = await loadImage('./logo.png');
-    ctx.drawImage(logo, 25, 20, 110, 110);
+    ctx.drawImage(logo, 40, 40, 80, 80);
   } catch (error) {
     console.log('Logo load error:', error.message);
   }
 
   const avatar = await loadImage(member.user.displayAvatarURL({ extension: 'png', size: 256 }));
-  drawCircleImage(ctx, avatar, 120, 190, 70);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 38px Arial';
-  ctx.fillText(member.user.username, 230, 120);
-
-  ctx.fillStyle = '#facc15';
-  ctx.font = 'bold 30px Arial';
-  ctx.fillText(`LEVEL ${stats.level}`, 230, 170);
-
-  ctx.fillStyle = '#cbd5e1';
-  ctx.font = '24px Arial';
-  ctx.fillText(`XP: ${stats.xp}`, 230, 210);
+  drawCircleImage(ctx, avatar, 120, 185, 70);
 
   const rank = getUserRank(member.user.id);
-  ctx.fillStyle = '#93c5fd';
-  ctx.font = '22px Arial';
-  ctx.fillText(`RANK: #${rank}`, 230, 245);
-
   const progressData = getProgressData(stats);
+  const rankImage = getRankImageByLevel(stats.level);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 42px Arial';
+  ctx.fillText(member.user.username, 220, 110);
+
+  ctx.fillStyle = '#93c5fd';
+  ctx.font = '18px Arial';
+  ctx.fillText(`ID: ${member.user.id}`, 220, 140);
+
+  ctx.fillStyle = '#facc15';
+  ctx.font = 'bold 28px Arial';
+  ctx.fillText(`RANK: #${rank}`, 220, 190);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 28px Arial';
+  ctx.fillText(`LEVEL: ${stats.level}`, 420, 190);
+
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '28px Arial';
+  ctx.fillText(`XP: ${stats.xp}`, 650, 190);
+
+  ctx.fillStyle = '#93c5fd';
+  ctx.font = '20px Arial';
+  ctx.fillText(`${progressData.currentXp} / ${progressData.neededXp} XP`, 220, 235);
 
   ctx.fillStyle = '#1e293b';
-  roundRect(ctx, 230, 270, 650, 25, 12);
+  roundRect(ctx, 220, 250, 680, 26, 13);
   ctx.fill();
 
-  const gradient = ctx.createLinearGradient(230, 270, 880, 270);
+  const gradient = ctx.createLinearGradient(220, 250, 900, 250);
   gradient.addColorStop(0, '#3b82f6');
+  gradient.addColorStop(0.5, '#38bdf8');
   gradient.addColorStop(1, '#22d3ee');
   ctx.fillStyle = gradient;
-  roundRect(ctx, 230, 270, 650 * progressData.progress, 25, 12);
+  roundRect(ctx, 220, 250, 680 * progressData.progress, 26, 13);
   ctx.fill();
-
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '20px Arial';
-  ctx.fillText(`${progressData.currentXp} / ${progressData.neededXp} XP`, 230, 260);
-
-  const rankImage = getRankImageByLevel(stats.level);
 
   try {
     const rankBadge = await loadImage(`./${rankImage}`);
-
     ctx.save();
     ctx.shadowColor = '#22d3ee';
     ctx.shadowBlur = 30;
-    ctx.drawImage(rankBadge, 800, 95, 150, 150);
+    ctx.drawImage(rankBadge, 820, 90, 130, 130);
     ctx.restore();
   } catch (e) {
-    console.log('rank image error:', e.message);
+    console.log('Rank image error:', e.message);
   }
 
   return canvas.toBuffer('image/png');
@@ -493,16 +468,58 @@ client.on('messageCreate', async (message) => {
   const userId = message.author.id;
   ensureUser(userId);
 
-  if (message.content === `${CONFIG.PREFIX}rank`) {
-    const buffer = await generateRankCard(message.member, data[userId]);
+  // !rank OR !rand
+  if (
+    message.content.startsWith(`${CONFIG.PREFIX}rank`) ||
+    message.content.startsWith(`${CONFIG.PREFIX}rand`)
+  ) {
+    const target = message.mentions.members.first() || message.member;
+    const targetId = target.id;
+
+    ensureUser(targetId);
+
+    const buffer = await generateRankCard(target, data[targetId]);
     const attachment = new AttachmentBuilder(buffer, { name: 'rank.png' });
+
     return message.channel.send({ files: [attachment] });
   }
 
+  // !leaderboard => image only
   if (message.content === `${CONFIG.PREFIX}leaderboard`) {
     const buffer = await generateLeaderboardImage(message.guild);
     const attachment = new AttachmentBuilder(buffer, { name: 'leaderboard.png' });
-    return message.channel.send({ files: [attachment] });
+
+    return message.channel.send({
+      files: [attachment]
+    });
+  }
+
+  // !addxp @user 50
+  if (message.content.startsWith(`${CONFIG.PREFIX}addxp`)) {
+    if (!isAdmin(message.member)) {
+      return message.reply('❌ You do not have permission to use this command.');
+    }
+
+    const target = message.mentions.members.first();
+    const args = message.content.trim().split(/\s+/);
+    const amount = parseInt(args[2], 10);
+
+    if (!target) {
+      return message.reply(`⚠️ Usage: ${CONFIG.PREFIX}addxp @user 50`);
+    }
+
+    if (isNaN(amount) || amount <= 0) {
+      return message.reply('⚠️ XP amount must be a number greater than 0.');
+    }
+
+    const targetId = target.id;
+    ensureUser(targetId);
+
+    data[targetId].xp += amount;
+    await handleLevelUp(target, targetId);
+    saveData();
+
+    return message.channel.send(`✅ Added **${amount} XP** to **${target.user.username}**.`);
   }
 
   if (message.content.startsWith(CONFIG.PREFIX)) return;
